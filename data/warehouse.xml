@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<warehouse>
+
+    <suppliers>
+        <supplier id="1">
+            <name>ElectroParts SRL</name>
+            <address>
+                <street>Strada Fabricii 12</street>
+                <city>Cluj-Napoca</city>
+                <country>Romania</country>
+            </address>
+            <phone>+40 264 555 101</phone>
+        </supplier>
+
+        <supplier id="2">
+            <name>ACME Industrial Inc.</name>
+            <address>
+                <street>742 Industrial Blvd</street>
+                <city>Detroit</city>
+                <country>USA</country>
+            </address>
+            <phone>+1 313 555 0142</phone>
+        </supplier>
+
+        <supplier id="3">
+            <name>Bosch Werkzeuge GmbH</name>
+            <address>
+                <street>Robert-Bosch-Strasse 5</street>
+                <city>Stuttgart</city>
+                <country>Germany</country>
+            </address>
+            <phone>+49 711 555 2300</phone>
+        </supplier>
+
+        <supplier id="4">
+            <name>Shenzhen MicroTech Ltd.</name>
+            <address>
+                <street>88 Keji Road</street>
+                <city>Shenzhen</city>
+                <country>China</country>
+            </address>
+            <phone>+86 755 5555 8800</phone>
+        </supplier>
+
+        <supplier id="5">
+            <name>MetalPro Bucuresti SA</name>
+            <address>
+                <street>Bulevardul Timisoara 45</street>
+                <city>Bucuresti</city>
+                <country>Romania</country>
+            </address>
+            <phone>+40 21 555 7788</phone>
+        </supplier>
+
+        <supplier id="6">
+            <name>Plastica Italia SpA</name>
+            <address>
+                <street>Via Torino 101</street>
+                <city>Milano</city>
+                <country>Italy</country>
+            </address>
+            <phone>+39 02 5555 4410</phone>
+        </supplier>
+    </suppliers>
+
+    <locations>
+        <location id="1">
+            <name>Location A100</name>
+            <code>A100</code>
+            <type>MAIN</type>
+        </location>
+
+        <location id="2">
+            <name>Location A200</name>
+            <code>A200</code>
+            <type>MAIN</type>
+        </location>
+
+        <location id="3">
+            <name>Location B100</name>
+            <code>B100</code>
+            <type>MAIN</type>
+        </location>
+
+        <location id="4">
+            <name>Location C100</name>
+            <code>C100</code>
+            <type>IMPORT</type>
+        </location>
+
+        <location id="5">
+            <name>Location D100</name>
+            <code>D100</code>
+            <type>EXPORT</type>
+        </location>
+
+        <location id="6">
+            <name>Location C200</name>
+            <code>C200</code>
+            <type>IMPORT</type>
+        </location>
+    </locations>
+
+    <categories>
+        <category id="1">
+            <name>Electronics</name>
+        </category>
+
+        <category id="2">
+            <name>Assembly</name>
+        </category>
+
+        <category id="3">
+            <name>Tools</name>
+        </category>
+
+        <category id="4">
+            <name>Raw Materials</name>
+        </category>
+
+        <category id="5">
+            <name>Packaging</name>
+        </category>
+
+        <category id="6">
+            <name>Misc.</name>
+        </category>
+    </categories>
+
+    <products>
+        <product id="1" category_id="1">
+            <name>Microcontroller ATmega328P</name>
+            <sku>ELC-0001</sku>
+        </product>
+
+        <product id="2" category_id="1">
+            <name>Resistor Kit 1/4W (600 pcs)</name>
+            <sku>ELC-0002</sku>
+        </product>
+
+        <product id="3" category_id="1">
+            <name>Power Supply 24V 10A</name>
+            <sku>ELC-0003</sku>
+        </product>
+
+        <product id="4" category_id="2">
+            <name>M6 Hex Bolt (box of 100)</name>
+            <sku>ASM-0001</sku>
+        </product>
+
+        <product id="5" category_id="2">
+            <name>Ball Bearing 6204-2RS</name>
+            <sku>ASM-0002</sku>
+        </product>
+
+        <product id="6" category_id="2">
+            <name>Aluminium Profile 40x40 (1m)</name>
+            <sku>ASM-0003</sku>
+        </product>
+
+        <product id="7" category_id="3">
+            <name>Cordless Drill 18V</name>
+            <sku>TLS-0001</sku>
+        </product>
+
+        <product id="8" category_id="3">
+            <name>Torque Wrench 20-100Nm</name>
+            <sku>TLS-0002</sku>
+        </product>
+
+        <product id="9" category_id="4">
+            <name>Steel Sheet 2mm (1x2m)</name>
+            <sku>RAW-0001</sku>
+        </product>
+
+        <product id="10" category_id="4">
+            <name>ABS Plastic Granules (25kg)</name>
+            <sku>RAW-0002</sku>
+        </product>
+
+        <product id="11" category_id="5">
+            <name>Cardboard Box 40x30x20</name>
+            <sku>PKG-0001</sku>
+        </product>
+
+        <product id="12" category_id="6">
+            <name>Safety Gloves (pair)</name>
+            <sku>MSC-0001</sku>
+        </product>
+    </products>
+
+    <product_suppliers>
+        <product_supplier id="1" product_id="1" supplier_id="1">
+            <price>3.60</price>
+        </product_supplier>
+        <product_supplier id="2" product_id="1" supplier_id="4">
+            <price>2.90</price>
+        </product_supplier>
+        <product_supplier id="3" product_id="2" supplier_id="4">
+            <price>8.10</price>
+        </product_supplier>
+        <product_supplier id="4" product_id="3" supplier_id="1">
+            <price>29.50</price>
+        </product_supplier>
+        <product_supplier id="5" product_id="3" supplier_id="4">
+            <price>24.00</price>
+        </product_supplier>
+        <product_supplier id="6" product_id="4" supplier_id="5">
+            <price>6.80</price>
+        </product_supplier>
+        <product_supplier id="7" product_id="4" supplier_id="2">
+            <price>7.20</price>
+        </product_supplier>
+        <product_supplier id="8" product_id="5" supplier_id="2">
+            <price>2.10</price>
+        </product_supplier>
+        <product_supplier id="9" product_id="6" supplier_id="5">
+            <price>11.00</price>
+        </product_supplier>
+        <product_supplier id="10" product_id="7" supplier_id="3">
+            <price>112.00</price>
+        </product_supplier>
+        <product_supplier id="11" product_id="8" supplier_id="3">
+            <price>64.00</price>
+        </product_supplier>
+        <product_supplier id="12" product_id="8" supplier_id="2">
+            <price>68.50</price>
+        </product_supplier>
+        <product_supplier id="13" product_id="9" supplier_id="5">
+            <price>48.00</price>
+        </product_supplier>
+        <product_supplier id="14" product_id="10" supplier_id="6">
+            <price>39.90</price>
+        </product_supplier>
+        <product_supplier id="15" product_id="11" supplier_id="6">
+            <price>0.45</price>
+        </product_supplier>
+        <product_supplier id="16" product_id="12" supplier_id="2">
+            <price>1.30</price>
+        </product_supplier>
+    </product_suppliers>
+
+    <stocks>
+        <stock id="1" product_id="1" location_id="1" quantity="1200" />
+        <stock id="2" product_id="1" location_id="3" quantity="150" />
+        <stock id="3" product_id="2" location_id="1" quantity="80" />
+        <stock id="4" product_id="3" location_id="2" quantity="45" />
+        <stock id="5" product_id="3" location_id="4" quantity="200" />
+        <stock id="6" product_id="4" location_id="2" quantity="320" />
+        <stock id="7" product_id="5" location_id="3" quantity="900" />
+        <stock id="8" product_id="6" location_id="2" quantity="260" />
+        <stock id="9" product_id="7" location_id="1" quantity="18" />
+        <stock id="10" product_id="8" location_id="1" quantity="12" />
+        <stock id="11" product_id="9" location_id="3" quantity="75" />
+        <stock id="12" product_id="10" location_id="4" quantity="40" />
+        <stock id="13" product_id="10" location_id="6" quantity="5" />
+        <stock id="14" product_id="11" location_id="5" quantity="3000" />
+        <stock id="15" product_id="12" location_id="2" quantity="500" />
+    </stocks>
+</warehouse>
