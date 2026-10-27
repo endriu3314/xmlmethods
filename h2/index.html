@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Warehouse Management</title>
+    <script type="module" src="/main.js"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+
+    <main class="mx-auto max-w-6xl px-6 py-12">
+
+        <fx-fore>
+            <fx-model>
+                <fx-instance id="warehouse" src="/rest/warehouse/warehouse.xml">
+                </fx-instance>
+
+                <fx-submission id="save" ref="instance('warehouse')" url="/rest/warehouse/warehouse.xml" method="put"
+                    replace="none">
+
+                    <fx-message event="submit-done" level="modal">
+                        Changes saved successfully!
+                    </fx-message>
+
+                    <fx-message event="submit-error" level="modal">
+                        Failed to save changes.
+                    </fx-message>
+                </fx-submission>
+            </fx-model>
+
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold tracking-tight">
+                    Warehouse Management
+                </h1>
+            </header>
+
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+                <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                    <div>
+                        <h2 class="text-lg font-semibold">
+                            Products
+                        </h2>
+                        <p class="mt-1 text-sm text-slate-500">
+                            {count(products/product)} products in inventory
+                        </p>
+                    </div>
+
+                    <fx-trigger>
+                        <button type="button"
+                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                            Save changes
+                        </button>
+                        <fx-send submission="save"></fx-send>
+                    </fx-trigger>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-left text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">ID</th>
+                                <th class="px-6 py-3 font-semibold">Name</th>
+                                <th class="px-6 py-3 font-semibold">SKU</th>
+                                <th class="px-6 py-3 font-semibold">Category</th>
+                            </tr>
+                        </thead>
+
+                        <tbody data-ref="products/product" class="divide-y divide-slate-100">
+                            <template>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-6 py-3 font-medium text-slate-500">
+                                        {@id}
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="name" update-event="input">
+                                            <input
+                                                class="widget w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                                type="text">
+                                        </fx-control>
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="sku" update-event="input">
+                                            <input
+                                                class="widget w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                                type="text">
+                                        </fx-control>
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="@category_id" update-event="change">
+                                            <select
+                                                class="widget w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500">
+                                                <option value="1">Electronics</option>
+                                                <option value="2">Assembly</option>
+                                                <option value="3">Tools</option>
+                                                <option value="4">Raw Materials</option>
+                                                <option value="5">Packaging</option>
+                                                <option value="6">Misc.</option>
+                                            </select>
+                                        </fx-control>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </fx-fore>
+    </main>
+
+</body>
+
+</html>
