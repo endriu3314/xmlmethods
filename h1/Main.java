@@ -16,6 +16,27 @@ public class Main {
 
         WarehouseParser saxParser = new SAXParser();
         Warehouse warehouseSax = saxParser.parse(xmlDb);
-        
+
+        System.out.println("\nQuery 1 - Stock per product");
+        Queries.stockPerProduct(warehouseDom).forEach((product, quantity) ->
+            System.out.printf("%-30s %s %d %n", product.name(), product.sku(), quantity));
+        System.out.println();
+        Queries.stockPerProduct(warehouseSax).forEach((product, quantity) ->
+            System.out.printf("%-30s %s %d %n", product.name(), product.sku(), quantity));
+
+        System.out.println("\nQuery 2 - Low stock alerts (< 100)");
+        Queries.lowStockAlerts(warehouseDom, 100).forEach(alert ->
+            System.out.printf("%-30s %6d -> %s @ %.2f %n",
+                alert.product().name(),
+                alert.quantity(),
+                alert.cheapestSupplier() != null ? alert.cheapestSupplier().name() : "no supplier",
+                alert.price()));
+        System.out.println();
+        Queries.lowStockAlerts(warehouseSax, 100).forEach(alert ->
+            System.out.printf("%-30s %6d -> %s @ %.2f %n",
+                alert.product().name(),
+                alert.quantity(),
+                alert.cheapestSupplier() != null ? alert.cheapestSupplier().name() : "no supplier",
+                alert.price()));
     }
 }
