@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:simpleType name="nonEmptyString">
+        <xs:restriction base="xs:string">
+            <xs:whiteSpace value="collapse"/>
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="phoneType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\+[0-9]{1,3}( [0-9]+){2,4}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="skuType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]{3}-[0-9]{4}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="locationCodeType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z][0-9]{3}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="locationKindType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="MAIN"/>
+            <xs:enumeration value="IMPORT"/>
+            <xs:enumeration value="EXPORT"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="priceType">
+        <xs:restriction base="xs:decimal">
+            <xs:minExclusive value="0"/>
+            <xs:fractionDigits value="2"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="quantityType">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="messageKindType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="INFO"/>
+            <xs:enumeration value="WARNING"/>
+            <xs:enumeration value="LOW_STOCK_ALERT"/>
+            <xs:enumeration value="RESTOCK_REQUEST"/>
+            <xs:enumeration value="SHIPMENT_NOTICE"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="addressType">
+        <xs:sequence>
+            <xs:element ref="street"/>
+            <xs:element ref="city"/>
+            <xs:element ref="country"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="supplierType">
+        <xs:sequence>
+            <xs:element ref="name"/>
+            <xs:element ref="address"/>
+            <xs:element ref="phone"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="suppliersType">
+        <xs:sequence>
+            <xs:element ref="supplier" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="locationType">
+        <xs:sequence>
+            <xs:element ref="name"/>
+            <xs:element ref="code"/>
+            <xs:element ref="type"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="locationsType">
+        <xs:sequence>
+            <xs:element ref="location" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="categoryType">
+        <xs:sequence>
+            <xs:element ref="name"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="categoriesType">
+        <xs:sequence>
+            <xs:element ref="category" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="productType">
+        <xs:sequence>
+            <xs:element ref="name"/>
+            <xs:element ref="sku"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+        <xs:attribute name="category_id" type="xs:IDREF" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="productsType">
+        <xs:sequence>
+            <xs:element ref="product" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="productSupplierType">
+        <xs:sequence>
+            <xs:element ref="price"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+        <xs:attribute name="product_id" type="xs:IDREF" use="required"/>
+        <xs:attribute name="supplier_id" type="xs:IDREF" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="productSuppliersType">
+        <xs:sequence>
+            <xs:element ref="product_supplier" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="stockType">
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+        <xs:attribute name="product_id" type="xs:IDREF" use="required"/>
+        <xs:attribute name="location_id" type="xs:IDREF" use="required"/>
+        <xs:attribute name="quantity" type="quantityType" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="stocksType">
+        <xs:sequence>
+            <xs:element ref="stock" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="messageType">
+        <xs:sequence>
+            <xs:element ref="content" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+        <xs:attribute name="type" type="messageKindType" use="required"/>
+        <xs:attribute name="created" type="xs:dateTime" use="optional"/>
+        <xs:attribute name="supplier_id" type="xs:IDREF" use="optional"/>
+        <xs:attribute name="location_id" type="xs:IDREF" use="optional"/>
+        <xs:attribute name="product_ids" type="xs:IDREFS" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="messagesType">
+        <xs:sequence>
+            <xs:element ref="message" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="warehouseType">
+        <xs:sequence>
+            <xs:element ref="suppliers"/>
+            <xs:element ref="locations"/>
+            <xs:element ref="categories"/>
+            <xs:element ref="products"/>
+            <xs:element ref="product_suppliers"/>
+            <xs:element ref="stocks"/>
+            <xs:element ref="messages" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="warehouse" type="warehouseType"/>
+
+    <xs:element name="suppliers" type="suppliersType"/>
+    <xs:element name="supplier" type="supplierType"/>
+    <xs:element name="address" type="addressType"/>
+    <xs:element name="street" type="nonEmptyString"/>
+    <xs:element name="city" type="nonEmptyString"/>
+    <xs:element name="country" type="nonEmptyString"/>
+    <xs:element name="name" type="nonEmptyString"/>
+    <xs:element name="phone" type="phoneType"/>
+
+    <xs:element name="locations" type="locationsType"/>
+    <xs:element name="location" type="locationType"/>
+    <xs:element name="code" type="locationCodeType"/>
+    <xs:element name="type" type="locationKindType"/>
+
+    <xs:element name="categories" type="categoriesType"/>
+    <xs:element name="category" type="categoryType"/>
+
+    <xs:element name="products" type="productsType"/>
+    <xs:element name="product" type="productType"/>
+    <xs:element name="sku" type="skuType"/>
+
+    <xs:element name="product_suppliers" type="productSuppliersType"/>
+    <xs:element name="product_supplier" type="productSupplierType"/>
+    <xs:element name="price" type="priceType"/>
+
+    <xs:element name="stocks" type="stocksType"/>
+    <xs:element name="stock" type="stockType"/>
+
+    <xs:element name="messages" type="messagesType"/>
+    <xs:element name="message" type="messageType"/>
+    <xs:element name="content" type="xs:string"/>
+
+</xs:schema>

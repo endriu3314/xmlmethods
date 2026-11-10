@@ -1,0 +1,4 @@
+package h4.models;
+
+public record ProductSupplier(String productId, String supplierId, double price) {
+}
