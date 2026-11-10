@@ -79,3 +79,70 @@ The WMS can be extended to include more features such as:
 - Orders system
 - Minimum quantity per product for alerts
 - Status for stocks, reserving for production, damaged stocks
+
+## Homework #2
+
+`h2/` is the Level B XForms mini-application: a Vite + Tailwind frontend
+using `@jinntec/fore` as the XForms processor. It renders the warehouse
+document (products, stocks, supplier prices) from the BaseX REST endpoint
+(`/rest/warehouse/warehouse.xml`, proxied via `vite.config.js`) and allows
+editing products and stock.
+
+```sh
+cd h2 && npm run dev
+```
+
+## Homework #3
+
+`h3/` extends `h2` (Fore + Vite + Tailwind) with:
+
+- `bindings.html` — `fx-bind` demos on a
+  stock-adjustment form backed by `public/adjustment.xml`, plus a low-stock
+  table driven by `public/filters.xml`.
+- `index.html` — improved Level B app: validated editable tables for
+  products, stocks, supplier prices and locations, live stock totals,
+  a low-stock filter, and `fx-submission` PUT saving back to BaseX.
+
+The Vite proxy injects BaseX Basic auth (`admin:mypassword`) for `/rest/*`.
+
+## Homework #4
+
+### XML Schema
+
+`data/warehouse.xsd` describes the database. All elements and data types are
+declared at global scope and referenced by name (reusable, flat structure).
+Links between the categories of information use `xs:ID` (primary keys) and
+`xs:IDREF` / `xs:IDREFS` (foreign keys: `product/@category_id`,
+`product_supplier/@product_id`, `/@supplier_id`, `stock/@product_id`,
+`/@location_id`, `message/@product_ids`). Entity ids in `warehouse.xml` were
+changed to NCName values (`s1`, `l1`, `c1`, `p1`, `ps1`, `st1`, `m1`) to
+satisfy `xs:ID`.
+
+The schema also defines `messages`/`message` at root level for future
+homeworks (stock alerts, restock requests, shipment notices).
+
+`data/warehouse.xml` links the schema via
+`xsi:noNamespaceSchemaLocation="warehouse.xsd"`.
+
+### Parsers with validation (`h4/`)
+
+The H1 DOM and SAX parsers were copied to `h4/` and extended with
+XML Schema validation, in both required flavours:
+
+- **Automatic validation on load** — `DocumentBuilderFactory` /
+  `SAXParserFactory` are given the compiled `Schema` (`setSchema`), so
+  `parse()` validates while reading the document; schema errors are rethrown
+  and abort the parse.
+- **Validation at request** — `WarehouseParser.validate(Path)` runs a
+  `javax.xml.validation.Validator` over a `DOMSource` / `SAXSource`.
+
+`data/warehouse_invalid.xml` is a deliberately invalid copy (duplicate ids,
+bad patterns, dangling `IDREF`s, negative price/quantity) used to prove
+validation fails on bad documents.
+
+Run from the repository root:
+
+```sh
+javac -d out h4/Main.java h4/models/*.java h4/parsers/*.java
+java -cp out h4.Main
+```
