@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Warehouse Management</title>
+    <script type="module" src="/main.js"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+
+    <main class="mx-auto max-w-6xl px-6 py-12">
+
+        <fx-fore>
+            <fx-model>
+                
+                <fx-instance id="warehouse" src="/rest/warehouse/warehouse.xml">
+                </fx-instance>
+
+                <fx-instance id="filters" src="/filters.xml">
+                </fx-instance>
+
+                <fx-bind ref="products/product">
+                    <fx-bind ref="@id" readonly="true()"></fx-bind>
+                    <fx-bind ref="name" required="true()" constraint="string-length(normalize-space(.)) ge 1">
+                        <fx-alert>Product name may not be empty.</fx-alert>
+                    </fx-bind>
+                    <fx-bind ref="sku" required="true()" constraint="matches(., '^[A-Z]{3}-[0-9]{4}$')">
+                        <fx-alert>SKU must look like ELC-0001 (3 letters, dash, 4 digits).</fx-alert>
+                    </fx-bind>
+                    <fx-bind ref="@category_id" required="true()"
+                        constraint=". = /warehouse/categories/category/@id">
+                        <fx-alert>Please choose a known category.</fx-alert>
+                    </fx-bind>
+                </fx-bind>
+
+                <fx-bind ref="stocks/stock"
+                    relevant="instance('filters')/mode != 'low' or (@quantity castable as xs:integer and instance('filters')/threshold castable as xs:integer and xs:integer(@quantity) lt xs:integer(instance('filters')/threshold))">
+                    <fx-bind ref="@product_id" readonly="true()"></fx-bind>
+                    <fx-bind ref="@location_id" readonly="true()"></fx-bind>
+                    <fx-bind ref="@quantity" type="xs:integer" required="true()"
+                        constraint=". castable as xs:integer and xs:integer(.) ge 0">
+                        <fx-alert>Quantity must be a whole number greater than or equal to 0.</fx-alert>
+                    </fx-bind>
+                </fx-bind>
+
+                <fx-bind ref="product_suppliers/product_supplier">
+                    <fx-bind ref="@product_id" readonly="true()"></fx-bind>
+                    <fx-bind ref="@supplier_id" readonly="true()"></fx-bind>
+                    <fx-bind ref="price" type="xs:decimal" required="true()"
+                        constraint=". castable as xs:decimal and xs:decimal(.) gt 0 and string-length(substring-after(., '.')) le 2">
+                        <fx-alert>Price must be a positive amount with at most 2 decimals.</fx-alert>
+                    </fx-bind>
+                </fx-bind>
+
+                <fx-bind ref="locations/location">
+                    <fx-bind ref="@id" readonly="true()"></fx-bind>
+                    <fx-bind ref="name" required="true()" constraint="string-length(normalize-space(.)) ge 1">
+                        <fx-alert>Location name may not be empty.</fx-alert>
+                    </fx-bind>
+                    <fx-bind ref="code" required="true()" constraint="matches(., '[A-Z][0-9]{3}')">
+                        <fx-alert>Code must be an uppercase letter followed by 3 digits (e.g. A100).</fx-alert>
+                    </fx-bind>
+                    <fx-bind ref="type" required="true()"></fx-bind>
+                </fx-bind>
+
+                <fx-bind ref="instance('filters')">
+                    <fx-bind ref="threshold" type="xs:integer" relevant="../mode = 'low'"
+                        required="../mode = 'low'"
+                        constraint=". castable as xs:integer and xs:integer(.) ge 0">
+                        <fx-alert>Threshold must be a whole number greater than or equal to 0.</fx-alert>
+                    </fx-bind>
+                    <fx-bind ref="total_units" readonly="true()"
+                        calculate="sum(instance('warehouse')/stocks/stock/@quantity)"></fx-bind>
+                </fx-bind>
+
+                <fx-submission id="save" ref="instance('warehouse')" url="/rest/warehouse/warehouse.xml"
+                    method="put" replace="none" nonrelevant="keep">
+
+                    <fx-message event="submit-done" level="modal">
+                        Changes saved successfully!
+                    </fx-message>
+
+                    <fx-message event="submit-error" level="modal">
+                        Failed to save changes - fix invalid fields and try again.
+                    </fx-message>
+                </fx-submission>
+            </fx-model>
+
+            <header
+                class="sticky top-0 z-20 -mx-6 -mt-12 mb-8 flex items-end justify-between border-b border-slate-200 bg-slate-100/80 px-6 py-4 backdrop-blur">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">
+                        Warehouse Management
+                    </h1>
+                    <p class="mt-1 text-sm text-slate-500">
+                        {count(products/product)} products -
+                        {count(stocks/stock)} stock entries -
+                        {count(product_suppliers/product_supplier)} supplier prices
+                    </p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="/bindings.html" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                        Bindings
+                    </a>
+                    <fx-trigger>
+                        <button type="button"
+                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                            Save changes
+                        </button>
+                        <fx-send submission="save"></fx-send>
+                    </fx-trigger>
+                </div>
+            </header>
+
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+                <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                    <div>
+                        <h2 class="text-lg font-semibold">
+                            Products
+                        </h2>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Total stock is calculated live from the stock entries below.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-left text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">ID</th>
+                                <th class="px-6 py-3 font-semibold">Name</th>
+                                <th class="px-6 py-3 font-semibold">SKU</th>
+                                <th class="px-6 py-3 font-semibold">Category</th>
+                                <th class="px-6 py-3 font-semibold">Total stock</th>
+                            </tr>
+                        </thead>
+
+                        <tbody data-ref="products/product" class="divide-y divide-slate-100">
+                            <template>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-6 py-3 font-medium text-slate-500">
+                                        {@id}
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="name" update-event="input">
+                                            <input title="Free-text product name (required, non-blank)."
+                                                class="widget w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                                type="text">
+                                            <fx-alert>Name may not be empty.</fx-alert>
+                                        </fx-control>
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="sku" update-event="input">
+                                            <input title="Stock keeping unit: 3 uppercase letters, a dash and 4 digits."
+                                                class="widget w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                                type="text">
+                                            <fx-alert>Invalid SKU format.</fx-alert>
+                                        </fx-control>
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="@category_id" update-event="change">
+                                            <select title="Category the product belongs to (required)."
+                                                data-ref="/warehouse/categories/category"
+                                                class="widget w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500">
+                                                <template>
+                                                    <option value="{@id}">{name}</option>
+                                                </template>
+                                            </select>
+                                        </fx-control>
+                                    </td>
+
+                                    <td class="px-6 py-3 tabular-nums">
+                                        {let $p := . return sum(/warehouse/stocks/stock[@product_id = $p/@id]/@quantity)}
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <div class="flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                            <h2 class="text-lg font-semibold">
+                                Stock levels
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Quantities on hand per product and location.
+                            </p>
+                        </div>
+
+                        <div class="flex items-end gap-4">
+                            <fx-control ref="instance('filters')/mode" update-event="change">
+                                <label class="mb-1 block text-xs font-medium text-slate-600"
+                                    title="Choose which rows the stock table shows.">Show</label>
+                                <select
+                                    class="widget rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500">
+                                    <option value="all">All entries</option>
+                                    <option value="low">Below threshold</option>
+                                </select>
+                            </fx-control>
+
+                            <fx-control ref="instance('filters')/threshold" update-event="input">
+                                <label class="mb-1 block text-xs font-medium text-slate-600"
+                                    title="Rows with a lower quantity than this number are shown.">Threshold</label>
+                                <input type="number" step="1" min="0"
+                                    class="widget w-28 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500">
+                                <fx-hint>Visible in "Below threshold" mode only</fx-hint>
+                                <fx-alert>Whole number ≥ 0.</fx-alert>
+                            </fx-control>
+
+                            <p class="pb-2 text-sm text-slate-500">
+                                Total units:
+                                <span class="font-semibold text-slate-700 tabular-nums">
+                                    <fx-output ref="instance('filters')/total_units"></fx-output>
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-left text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">Product</th>
+                                <th class="px-6 py-3 font-semibold">Location</th>
+                                <th class="px-6 py-3 font-semibold">Quantity</th>
+                            </tr>
+                        </thead>
+
+                        <tbody data-ref="stocks/stock" class="divide-y divide-slate-100">
+                            <template>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-6 py-3">
+                                        {let $s := . return /warehouse/products/product[@id = $s/@product_id]/name}
+                                    </td>
+
+                                    <td class="px-6 py-3 text-slate-500">
+                                        {let $s := . return concat(/warehouse/locations/location[@id = $s/@location_id]/code, ' - ', /warehouse/locations/location[@id = $s/@location_id]/type)}
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="@quantity" update-event="input">
+                                            <input title="Units on hand at this location (required, whole number, ≥ 0)."
+                                                type="number" step="1" min="0"
+                                                class="widget w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                            <fx-alert>Whole number ≥ 0.</fx-alert>
+                                        </fx-control>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h2 class="text-lg font-semibold">
+                        Supplier prices
+                    </h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Purchase price of each product per supplier.
+                    </p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-left text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">Product</th>
+                                <th class="px-6 py-3 font-semibold">Supplier</th>
+                                <th class="px-6 py-3 font-semibold">Price</th>
+                            </tr>
+                        </thead>
+
+                        <tbody data-ref="product_suppliers/product_supplier" class="divide-y divide-slate-100">
+                            <template>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-6 py-3">
+                                        {let $ps := . return /warehouse/products/product[@id = $ps/@product_id]/name}
+                                    </td>
+
+                                    <td class="px-6 py-3 text-slate-500">
+                                        {let $ps := . return /warehouse/suppliers/supplier[@id = $ps/@supplier_id]/name}
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="price" update-event="input">
+                                            <input title="Unit purchase price (required, positive, max 2 decimals)."
+                                                type="number" step="0.01" min="0"
+                                                class="widget w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                            <fx-alert>Positive amount, max 2 decimals.</fx-alert>
+                                        </fx-control>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h2 class="text-lg font-semibold">
+                        Locations
+                    </h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Storage locations and their type.
+                    </p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-left text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">ID</th>
+                                <th class="px-6 py-3 font-semibold">Name</th>
+                                <th class="px-6 py-3 font-semibold">Code</th>
+                                <th class="px-6 py-3 font-semibold">Type</th>
+                            </tr>
+                        </thead>
+
+                        <tbody data-ref="locations/location" class="divide-y divide-slate-100">
+                            <template>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-6 py-3 font-medium text-slate-500">
+                                        {@id}
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="name" update-event="input">
+                                            <input type="text"
+                                                class="widget w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                            <fx-alert>Location name may not be empty.</fx-alert>
+                                        </fx-control>
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="code" update-event="input">
+                                            <input type="text"
+                                                class="widget w-28 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                            <fx-alert>Letter + 3 digits (e.g. A100).</fx-alert>
+                                        </fx-control>
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <fx-control ref="type" update-event="change">
+                                            <select
+                                                class="widget w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500">
+                                                <option value="MAIN">MAIN</option>
+                                                <option value="IMPORT">IMPORT</option>
+                                                <option value="EXPORT">EXPORT</option>
+                                            </select>
+                                        </fx-control>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </fx-fore>
+    </main>
+
+</body>
+
+</html>

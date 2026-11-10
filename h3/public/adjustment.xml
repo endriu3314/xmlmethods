@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<demo>
+    <adjustment id="adj-1" status="draft">
+        <product_id>p3</product_id>
+        <type>IN</type>
+        <quantity>10</quantity>
+        <unit_price>5.00</unit_price>
+        <supplier_id></supplier_id>
+        <reason></reason>
+        <target_location></target_location>
+        <date>2026-11-09</date>
+    </adjustment>
+    <summary>
+        <total_stock>0</total_stock>
+        <projected_stock>0</projected_stock>
+        <line_value>0</line_value>
+        <low_stock_notice>Projected stock is below 50 units - consider sending a restock request.</low_stock_notice>
+    </summary>
+</demo>

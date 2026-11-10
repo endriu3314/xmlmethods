@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XForms Bindings — 18 demos</title>
+    <script type="module" src="/main.js"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+
+    <main class="mx-auto max-w-6xl px-6 py-12">
+
+        <fx-fore>
+            <fx-model>
+                
+                <fx-instance src="/adjustment.xml">
+                </fx-instance>
+
+                <fx-instance id="warehouse" src="/rest/warehouse/warehouse.xml">
+                </fx-instance>
+
+                <fx-instance id="filters" src="/filters.xml">
+                </fx-instance>
+
+                <fx-bind ref="instance('filters')/threshold" type="xs:integer" required="true()">
+                </fx-bind>
+
+                <fx-bind ref="adjustment" readonly="@status = 'finalized'">
+
+                    <fx-bind ref="@id" readonly="true()"></fx-bind>
+
+                    <fx-bind ref="product_id" required="true()"
+                        constraint=". = instance('warehouse')/products/product/@id">
+                        <fx-alert>Choose a product that exists in the warehouse.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="quantity" type="xs:integer" required="true()"
+                        constraint=". castable as xs:integer and xs:integer(.) ge 1">
+                        <fx-alert>Quantity must be a whole number of at least 1.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="unit_price" type="xs:decimal" required="true()"
+                        constraint=". castable as xs:decimal and xs:decimal(.) gt 0 and string-length(substring-after(., '.')) le 2">
+                        <fx-alert>Price must be a positive amount with at most 2 decimals.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="date" type="xs:date" required="true()"
+                        constraint=". castable as xs:date and xs:date(.) le current-date()">
+                        <fx-alert>Enter a valid date that is not in the future.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="supplier_id" relevant="../type = 'IN'" required="../type = 'IN'">
+                        <fx-alert>Supplier is required for inbound stock.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="reason" relevant="../type = 'OUT'" required="../type = 'OUT'">
+                        <fx-alert>A reason is required when stock goes out.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="target_location" relevant="../type = 'TRANSFER'"
+                        required="../type = 'TRANSFER'">
+                        <fx-alert>Choose the destination location for the transfer.</fx-alert>
+                    </fx-bind>
+                </fx-bind>
+
+                <fx-bind ref="summary" readonly="true()">
+
+                    <fx-bind ref="total_stock"
+                        calculate="let $pid := ../../adjustment/product_id return sum(instance('warehouse')/stocks/stock[@product_id = $pid]/@quantity)"></fx-bind>
+
+                    <fx-bind ref="projected_stock"
+                        calculate="let $q := if (../../adjustment/quantity castable as xs:integer) then xs:integer(../../adjustment/quantity) else 0 return ../total_stock + (if (../../adjustment/type = 'OUT') then -$q else if (../../adjustment/type = 'TRANSFER') then 0 else $q)"></fx-bind>
+
+                    <fx-bind ref="line_value"
+                        calculate="let $q := if (../../adjustment/quantity castable as xs:decimal) then xs:decimal(../../adjustment/quantity) else 0, $p := if (../../adjustment/unit_price castable as xs:decimal) then xs:decimal(../../adjustment/unit_price) else 0 return round($q * $p * 100) div 100"></fx-bind>
+
+                    <fx-bind ref="low_stock_notice"
+                        relevant="../projected_stock castable as xs:integer and xs:integer(../projected_stock) lt 50"></fx-bind>
+                </fx-bind>
+            </fx-model>
+
+            <header class="mb-8 flex items-end justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">
+                        XForms Bindings
+                    </h1>
+                </div>
+                <a href="/" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    ← Warehouse app
+                </a>
+            </header>
+
+            <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-100 px-6 py-4">
+                    <h2 class="text-lg font-semibold">Stock adjustment</h2>
+                    <p class="mt-0.5 text-sm text-slate-500">
+                        Switch the movement type to see fields appear; finalizing locks the form.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-x-8 gap-y-5 px-6 py-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <fx-control ref="adjustment/@id" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Adjustment ID</label>
+                        <input type="text" class="widget w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                    </fx-control>
+
+                    <fx-control ref="adjustment/product_id" update-event="change" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Product</label>
+                        <select data-ref="instance('warehouse')/products/product"
+                            class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            <template>
+                                <option value="{@id}">{name}</option>
+                            </template>
+                        </select>
+                        <fx-alert>Product must exist in the warehouse.</fx-alert>
+                    </fx-control>
+
+                    <fx-control ref="adjustment/type" update-event="change" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Movement type</label>
+                        <select class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            <option value="IN">IN — receive stock</option>
+                            <option value="OUT">OUT — remove stock</option>
+                            <option value="TRANSFER">TRANSFER — move stock</option>
+                        </select>
+                    </fx-control>
+
+                    <fx-control ref="adjustment/quantity" update-event="input" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Quantity</label>
+                        <input type="number" step="1" min="1" class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                        <fx-alert>Enter a whole number of at least 1.</fx-alert>
+                    </fx-control>
+
+                    <fx-control ref="adjustment/unit_price" update-event="input" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Unit price</label>
+                        <input type="number" step="0.01" min="0" class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                        <fx-alert>Enter a positive amount with at most 2 decimals.</fx-alert>
+                    </fx-control>
+
+                    <fx-control ref="adjustment/date" update-event="change" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Date</label>
+                        <input type="date" class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                        <fx-alert>Enter a valid date that is not in the future.</fx-alert>
+                    </fx-control>
+
+                    <fx-control ref="adjustment/supplier_id" update-event="change" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Supplier</label>
+                        <select data-ref="instance('warehouse')/suppliers/supplier" selection="open"
+                            class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            <template>
+                                <option value="{@id}">{name}</option>
+                            </template>
+                        </select>
+                        <fx-alert>Supplier is required for inbound stock.</fx-alert>
+                    </fx-control>
+
+                    <fx-control ref="adjustment/reason" update-event="input" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Reason</label>
+                        <input type="text" class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                        <fx-alert>A reason is required when stock goes out.</fx-alert>
+                    </fx-control>
+
+                    <fx-control ref="adjustment/target_location" update-event="change" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Target location</label>
+                        <select data-ref="instance('warehouse')/locations/location" selection="open"
+                            class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            <template>
+                                <option value="{@id}">{name} ({type})</option>
+                            </template>
+                        </select>
+                        <fx-alert>Choose the destination location.</fx-alert>
+                    </fx-control>
+                </div>
+
+                <div class="flex items-center gap-4 border-t border-slate-100 px-6 py-4">
+                    <fx-control ref="adjustment/@status" update-event="change" class="flex items-center gap-2">
+                        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</label>
+                        <select class="widget w-40 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            <option value="draft">Draft</option>
+                            <option value="finalized">Finalized</option>
+                        </select>
+                    </fx-control>
+                    <fx-trigger>
+                        <button type="button" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">Reset to draft</button>
+                        <fx-action>
+                            <fx-setvalue ref="adjustment/@status" value="'draft'"></fx-setvalue>
+                        </fx-action>
+                    </fx-trigger>
+                </div>
+            </section>
+
+            <section class="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 class="text-lg font-semibold">Summary</h2>
+
+                <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div class="rounded-lg bg-slate-50 px-4 py-3">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Total stock</dt>
+                        <dd class="mt-1 text-2xl font-semibold tabular-nums">
+                            <fx-output ref="summary/total_stock"></fx-output>
+                        </dd>
+                    </div>
+                    <div class="rounded-lg bg-slate-50 px-4 py-3">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Projected
+                            stock</dt>
+                        <dd class="mt-1 text-2xl font-semibold tabular-nums">
+                            <fx-output ref="summary/projected_stock"></fx-output>
+                        </dd>
+                    </div>
+                    <div class="rounded-lg bg-slate-50 px-4 py-3">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Line value
+</dt>
+                        <dd class="mt-1 text-2xl font-semibold tabular-nums">
+                            <fx-output ref="summary/line_value"></fx-output>
+                        </dd>
+                    </div>
+                </dl>
+
+                <fx-output ref="summary/low_stock_notice"
+                    class="mt-4 block rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+                </fx-output>
+            </section>
+
+            <section class="mt-8 rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <h2 class="text-lg font-semibold">Low stock</h2>
+                    <fx-control ref="instance('filters')/threshold" update-event="change"
+                        class="flex items-center gap-2">
+                        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Threshold</label>
+                        <select
+                            class="widget w-28 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                    </fx-control>
+                </div>
+
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr
+                            class="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            <th class="px-6 py-3">Product</th>
+                            <th class="px-6 py-3">Location</th>
+                            <th class="px-6 py-3 text-right">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody data-ref="instance('warehouse')/stocks/stock" class="divide-y divide-slate-100">
+                        <template>
+                            <tr class="hover:bg-slate-50">
+                                <td
+                                    class="{if (@quantity castable as xs:integer and instance('filters')/threshold castable as xs:integer and xs:integer(@quantity) lt xs:integer(instance('filters')/threshold)) then 'px-6 py-3' else 'px-6 py-3 row-skip'}">{let $p := @product_id return /warehouse/products/product[@id = $p]/name}
+                                </td>
+                                <td class="px-6 py-3 text-slate-500">{let $l := @location_id return /warehouse/locations/location[@id = $l]/name}
+                                </td>
+                                <td class="px-6 py-3 text-right">
+                                    <fx-output ref="@quantity" class="font-semibold text-amber-700"></fx-output>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </section>
+
+        </fx-fore>
+    </main>
+
+</body>
+
+</html>
