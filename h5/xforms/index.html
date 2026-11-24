@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Warehouse XPath Explorer</title>
+    <link rel="icon" href="data:," />
+    <script type="module" src="/main.js"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+
+    <main class="mx-auto max-w-6xl px-6 py-12">
+
+        <fx-fore>
+            <fx-model>
+
+                <fx-instance id="warehouse" src="/rest/warehouse/warehouse.xml">
+                </fx-instance>
+
+                <fx-instance id="ui" src="/query.xml">
+                </fx-instance>
+
+                <fx-bind ref="instance('ui')">
+
+                    <fx-bind ref="product_id" required="true()"
+                        constraint=". = instance('warehouse')/products/product/@id">
+                        <fx-alert>Pick a product that exists in the warehouse.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="category_id" required="true()"
+                        constraint=". = instance('warehouse')/categories/category/@id">
+                        <fx-alert>Pick a known category.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="location_id" required="true()"
+                        constraint=". = instance('warehouse')/locations/location/@id">
+                        <fx-alert>Pick a known location.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="country" required="true()"
+                        constraint=". = instance('warehouse')/suppliers/supplier/address/country">
+                        <fx-alert>Pick a country that has a supplier.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="threshold" type="xs:integer" required="true()"
+                        constraint=". castable as xs:integer and xs:integer(.) ge 0">
+                        <fx-alert>Threshold must be a whole number greater than or equal to 0.</fx-alert>
+                    </fx-bind>
+
+                    <fx-bind ref="units_in_selected" readonly="true()"
+                        calculate="sum(instance('warehouse')/stocks/stock[@product_id = instance('ui')/product_id]/@quantity)">
+                    </fx-bind>
+                </fx-bind>
+            </fx-model>
+
+            <header class="sticky top-0 z-20 -mx-6 -mt-12 mb-8 flex items-end justify-between border-b border-slate-200 bg-slate-100/80 px-6 py-4 backdrop-blur">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">
+                        Warehouse XPath Explorer
+                    </h1>
+                    <p class="mt-1 text-sm text-slate-500">
+                        {count(products/product)} products -
+                        {count(suppliers/supplier)} suppliers -
+                        {count(locations/location)} locations -
+                        {count(stocks/stock)} stock entries
+                    </p>
+                </div>
+            </header>
+
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h2 class="text-lg font-semibold">Simple XPath</h2>
+                </div>
+                <div class="grid grid-cols-1 gap-6 px-6 py-5 sm:grid-cols-3">
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Suppliers</h3>
+                        <ul class="mt-2 space-y-1 text-sm" data-ref="suppliers/supplier/name">
+                            <template>
+                                <li>{.}</li>
+                            </template>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Categories</h3>
+                        <ul class="mt-2 space-y-1 text-sm" data-ref="categories/category/name/text()">
+                            <template>
+                                <li>{.}</li>
+                            </template>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Supplier countries</h3>
+                        <ul class="mt-2 space-y-1 text-sm" data-ref="//address/country">
+                            <template>
+                                <li>{.}</li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h2 class="text-lg font-semibold">Product explorer</h2>
+                </div>
+
+                <div class="grid grid-cols-1 gap-8 px-6 py-6 lg:grid-cols-3">
+                    <div>
+                        <ul id="product-opts" class="hidden" data-ref="instance('warehouse')/products/product">
+                            <template>
+                                <li data-value="{@id}">{name}</li>
+                            </template>
+                        </ul>
+                        <fx-control ref="instance('ui')/product_id" update-event="change" class="block">
+                            <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Product</label>
+                            <select data-src="#product-opts"
+                                class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select>
+                            <fx-alert>Pick a product that exists.</fx-alert>
+                        </fx-control>
+
+                        <dl class="mt-5 space-y-3">
+                            <div class="rounded-lg bg-slate-50 px-4 py-3">
+                                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">SKU</dt>
+                                <dd class="mt-1 font-mono text-sm">
+                                    <fx-output ref="instance('warehouse')/products/product[@id = instance('ui')/product_id]/sku">
+                                    </fx-output>
+                                </dd>
+                            </div>
+                            <div class="rounded-lg bg-slate-50 px-4 py-3">
+                                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Category</dt>
+                                <dd class="mt-1 text-sm font-medium">
+                                    <fx-output ref="instance('warehouse')/categories/category[@id = instance('warehouse')/products/product[@id = instance('ui')/product_id]/@category_id]/name">
+                                    </fx-output>
+                                </dd>
+                            </div>
+                            <div class="rounded-lg bg-slate-50 px-4 py-3">
+                                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Total units</dt>
+                                <dd class="mt-1 text-2xl font-semibold tabular-nums">
+                                    <fx-output ref="instance('ui')/units_in_selected"></fx-output>
+                                </dd>
+                            </div>
+                            <div class="rounded-lg bg-emerald-50 px-4 py-3">
+                                <dt class="text-xs font-medium uppercase tracking-wide text-emerald-700">Cheapest offer</dt>
+                                <dd class="mt-1 text-sm">
+                                    <fx-output ref="instance('warehouse')/product_suppliers/product_supplier[@product_id = instance('ui')/product_id][not(price > instance('warehouse')/product_suppliers/product_supplier[@product_id = instance('ui')/product_id]/price)]/price">
+                                    </fx-output>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Stock of this product
+                        </h3>
+                        <fx-repeat class="mt-2 block divide-y divide-slate-100 text-sm"
+                            ref="instance('warehouse')/stocks/stock[@product_id = instance('ui')/product_id]">
+                            <template>
+                                <li class="flex items-center justify-between py-2">
+                                    <span>{let $l := @location_id return concat(instance('warehouse')/locations/location[@id = $l]/code, ' (', instance('warehouse')/locations/location[@id = $l]/type, ')')}</span>
+                                    <span class="tabular-nums text-slate-600">{@quantity} units</span>
+                                </li>
+                            </template>
+                        </fx-repeat>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Suppliers of this product
+                        </h3>
+                        <fx-repeat class="mt-2 block divide-y divide-slate-100 text-sm"
+                            ref="instance('warehouse')/suppliers/supplier[@id = instance('warehouse')/product_suppliers/product_supplier[@product_id = instance('ui')/product_id]/@supplier_id]">
+                            <template>
+                                <li class="flex items-center justify-between py-2">
+                                    <span>{name}</span>
+                                    <span class="tabular-nums text-slate-600">{let $s := @id return concat(instance('warehouse')/product_suppliers/product_supplier[@supplier_id = $s][@product_id = instance('ui')/product_id]/price, ' EUR')}</span>
+                                </li>
+                            </template>
+                        </fx-repeat>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h2 class="text-lg font-semibold">Category browser</h2>
+                </div>
+
+                <div class="grid grid-cols-1 gap-8 px-6 py-6 lg:grid-cols-3">
+                    <div class="lg:col-span-2">
+                        <ul id="category-opts" class="hidden" data-ref="instance('warehouse')/categories/category">
+                            <template>
+                                <li data-value="{@id}">{name}</li>
+                            </template>
+                        </ul>
+                        <fx-control ref="instance('ui')/category_id" update-event="change" class="block">
+                            <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Category</label>
+                            <select data-src="#category-opts"
+                                class="widget w-full max-w-xs rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select>
+                            <fx-alert>Pick a known category.</fx-alert>
+                        </fx-control>
+
+                        <div class="mt-4 grid grid-cols-[1fr_auto_auto] gap-x-6 text-left text-sm">
+                            <div class="py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Product</div>
+                            <div class="py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">SKU</div>
+                            <div class="py-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Total stock</div>
+                        </div>
+                        <fx-repeat class="block divide-y divide-slate-100 text-sm"
+                            ref="instance('warehouse')/products/product[@category_id = instance('ui')/category_id]">
+                            <template>
+                                <div class="grid grid-cols-[1fr_auto_auto] gap-x-6 py-2">
+                                    <span>{name}</span>
+                                    <span class="font-mono text-slate-500">{sku}</span>
+                                    <span class="text-right tabular-nums">{let $p := @id return sum(instance('warehouse')/stocks/stock[@product_id = $p]/@quantity)}</span>
+                                </div>
+                            </template>
+                        </fx-repeat>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Suppliers covering this category
+                        </h3>
+                        <fx-repeat class="mt-2 block divide-y divide-slate-100 text-sm"
+                            ref="instance('warehouse')/suppliers/supplier[@id = instance('warehouse')/product_suppliers/product_supplier[@product_id = instance('warehouse')/products/product[@category_id = instance('ui')/category_id]/@id]/@supplier_id]">
+                            <template>
+                                <li class="py-2">{name} <span class="text-slate-400">({address/country})</span></li>
+                            </template>
+                        </fx-repeat>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h2 class="text-lg font-semibold">Location contents</h2>
+                </div>
+
+                <div class="px-6 py-6">
+                    <ul id="location-opts" class="hidden" data-ref="instance('warehouse')/locations/location">
+                        <template>
+                            <li data-value="{@id}">{name} ({type})</li>
+                        </template>
+                    </ul>
+                    <fx-control ref="instance('ui')/location_id" update-event="change" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Location</label>
+                        <select data-src="#location-opts"
+                            class="widget w-full max-w-xs rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select>
+                        <fx-alert>Pick a known location.</fx-alert>
+                    </fx-control>
+
+                    <fx-repeat class="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3"
+                        ref="instance('warehouse')/products/product[@id = instance('warehouse')/stocks/stock[@location_id = instance('ui')/location_id]/@product_id]">
+                        <template>
+                            <li class="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                                <span>{name}</span>
+                                <span class="tabular-nums text-slate-600">{let $p := @id return sum(instance('warehouse')/stocks/stock[@product_id = $p][@location_id = instance('ui')/location_id]/@quantity)}</span>
+                            </li>
+                        </template>
+                    </fx-repeat>
+                </div>
+            </section>
+
+            <section class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h2 class="text-lg font-semibold">Suppliers by country</h2>
+                </div>
+
+                <div class="px-6 py-6">
+                    <ul id="country-opts" class="hidden"
+                        data-ref="distinct-values(instance('warehouse')/suppliers/supplier/address/country)">
+                        <template>
+                            <li data-value="{.}">{.}</li>
+                        </template>
+                    </ul>
+                    <fx-control ref="instance('ui')/country" update-event="change" class="block">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Country</label>
+                        <select data-src="#country-opts"
+                            class="widget w-full max-w-xs rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></select>
+                        <fx-alert>Pick a country that has a supplier.</fx-alert>
+                    </fx-control>
+
+                    <fx-repeat class="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2"
+                        ref="instance('warehouse')/suppliers/supplier[address/country = instance('ui')/country]">
+                        <template>
+                            <li class="rounded-lg bg-slate-50 px-4 py-3">
+                                <div class="font-medium">{name}</div>
+                                <div class="mt-0.5 text-slate-500">{address/city} - {phone}</div>
+                            </li>
+                        </template>
+                    </fx-repeat>
+                </div>
+            </section>
+
+            <section class="mt-10 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                    <div>
+                        <h2 class="text-lg font-semibold">Low stock watcher</h2>
+                    </div>
+                    <fx-control ref="instance('ui')/threshold" update-event="input" class="block w-36">
+                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Threshold</label>
+                        <input type="number" step="1" min="0"
+                            class="widget w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                        <fx-alert>Whole number of at least 0.</fx-alert>
+                    </fx-control>
+                </div>
+
+                <fx-repeat ref="instance('warehouse')/stocks/stock[xs:integer(@quantity) lt xs:integer(instance('ui')/threshold)]"
+                    class="block divide-y divide-slate-100">
+                    <template>
+                        <div class="flex items-center justify-between px-6 py-3 text-sm">
+                            <span class="font-medium">{let $p := @product_id return instance('warehouse')/products/product[@id = $p]/name}</span>
+                            <span class="text-slate-500">{let $l := @location_id return instance('warehouse')/locations/location[@id = $l]/code}</span>
+                            <span class="font-semibold tabular-nums text-amber-700">
+                                <fx-output ref="@quantity"></fx-output> units
+                            </span>
+                        </div>
+                    </template>
+                </fx-repeat>
+            </section>
+
+        </fx-fore>
+    </main>
+
+</body>
+
+</html>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui>
+    <product_id>p8</product_id>
+    <category_id>c1</category_id>
+    <location_id>l5</location_id>
+    <country>Romania</country>
+    <threshold>50</threshold>
+    <units_in_selected>0</units_in_selected>
+</ui>
